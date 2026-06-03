@@ -147,11 +147,12 @@ class ChatAgentToolkitManager(AgentToolkitManager):
                 available_tools.append(mcp_tool)
 
         # Web Search isn't supported by AWS Bedrock as primary provider
-        variant = get_llm_gateway_variant(self._team, self._user)
-        uses_bedrock_primary = (
-            variant == "gateway-bedrock" and settings.LLM_GATEWAY_URL and settings.LLM_GATEWAY_API_KEY
-        )
-        if not uses_bedrock_primary:
-            available_tools.append({"type": "web_search_20250305", "name": "web_search", "max_uses": 5})
+        # Disabled: Our API gateway uses AWS Bedrock backend which doesn't support web_search
+        # variant = get_llm_gateway_variant(self._team, self._user)
+        # uses_bedrock_primary = (
+        #     variant == "gateway-bedrock" and settings.LLM_GATEWAY_URL and settings.LLM_GATEWAY_API_KEY
+        # )
+        # if not uses_bedrock_primary:
+        #     available_tools.append({"type": "web_search_20250305", "name": "web_search", "max_uses": 5})
 
         return available_tools
