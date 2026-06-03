@@ -522,6 +522,16 @@ class AnthropicConversationCompactionManager(ConversationCompactionManager):
         thinking_config: dict[str, Any] | None = None,
         **kwargs,
     ) -> int:
-        return await database_sync_to_async(model.get_num_tokens_from_messages, thread_sensitive=False)(
-            messages, thinking=thinking_config, tools=tools
-        )
+        try:
+            return await database_sync_to_async(model.get_num_tokens_from_messages, thread_sensitive=False)(
+                messages, thinking=thinking_config, tools=tools
+            )
+        except Exception as e:
+            # Fallback to estimation if count_tokens API is not available
+            # This happens when using API gateways that don't implement /v1/messages/count_tokens
+            import structlog
+            logger = structlog.get_logger(__name__)
+            logger.warning("token_count_api_unavailable", error=str(e))
+
+            tool_tokens = self._get_estimated_tools_tokens(tools) if tools else 0
+            return sum(self._get_estimated_langchain_message_tokens(message) for message in messages) + tool_tokens
